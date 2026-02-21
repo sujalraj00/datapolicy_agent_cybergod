@@ -119,8 +119,8 @@ PolicyGuard AI is an intelligent compliance monitoring system that eliminates th
 <table>
   <tr>
     <td align="center">
-      <img src="assets/screenshots/dashboard.png" alt="Main Dashboard" width="400"/>
-      <br/><b>Compliance Dashboard</b>
+      <img src="Screenshot/welcome.jpeg" alt="Main Dashboard" width="400"/>
+      <br/><b>Welcome Screen</b>
     </td>
     <td align="center">
       <img src="assets/screenshots/policy-upload.png" alt="Policy Upload" width="400"/>
