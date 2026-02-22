@@ -1,16 +1,22 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/summary.dart';
 import '../models/violation.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android emulator by default if not specified in .env
-  static final String baseUrl = dotenv.get(
-    'API_BASE_URL',
-    fallback: 'http://10.0.2.2:3000',
-  );
+  // On web (Chrome) use localhost:3000; on Android emulator use 10.0.2.2:3000.
+  // kIsWeb is a compile-time constant — guaranteed to be true in Chrome builds.
+  static String get baseUrl {
+    // Check dotenv first; fall back to platform-specific default.
+    final envUrl = dotenv.get('API_BASE_URL');
+    final envWeb = dotenv.get('API_BASE_URL_WEB');
+    // if (envUrl != null && envUrl.isNotEmpty) return envUrl;
+    return kIsWeb ? envWeb : envUrl;
+  }
 
   Future<SummaryDashboard?> getSummary() async {
     try {
@@ -76,15 +82,36 @@ class ApiService {
   }
 
   /// Upload a transaction CSV file. Returns true on success.
-  Future<bool> uploadTransactionDataset(String filePath) async {
+  /// Accepts either a [filePath] (mobile) or [bytes] + [fileName] (web).
+  Future<bool> uploadTransactionDataset(
+    String? filePath, {
+    Uint8List? bytes,
+    String? fileName,
+  }) async {
     try {
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/transactions/upload'),
       );
-      request.files.add(await http.MultipartFile.fromPath('dataset', filePath));
-      final response = await request.send();
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (bytes != null && fileName != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes('dataset', bytes, filename: fileName),
+        );
+      } else if (filePath != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('dataset', filePath),
+        );
+      } else {
+        print('uploadTransactionDataset: no file provided');
+        return false;
+      }
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+      print('Dataset upload failed: ${response.statusCode} ${response.body}');
+      return false;
     } catch (e) {
       print('Error uploading dataset: $e');
     }
@@ -92,23 +119,36 @@ class ApiService {
   }
 
   /// Upload a policy document (PDF/TXT/CSV). Returns true on success.
+  /// Accepts either a [filePath] (mobile) or [bytes] + [fileName] (web).
   Future<bool> uploadPolicy(
-    String filePath,
-    String policyName,
-    String description,
-  ) async {
+    String? filePath, {
+    Uint8List? bytes,
+    String? fileName,
+  }) async {
     try {
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/policy/upload'),
       );
-      request.files.add(
-        await http.MultipartFile.fromPath('policy_pdf', filePath),
-      );
-      request.fields['policy_name'] = policyName;
-      request.fields['description'] = description;
-      final response = await request.send();
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (bytes != null && fileName != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes('policy_pdf', bytes, filename: fileName),
+        );
+      } else if (filePath != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('policy_pdf', filePath),
+        );
+      } else {
+        print('uploadPolicy: no file provided');
+        return false;
+      }
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+      print('Policy upload failed: ${response.statusCode} ${response.body}');
+      return false;
     } catch (e) {
       print('Error uploading policy: $e');
     }

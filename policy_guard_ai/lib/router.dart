@@ -9,6 +9,7 @@ import 'screens/violation_reasoning_screen.dart';
 import 'screens/human_review_screen.dart';
 import 'screens/audit_reports_screen.dart';
 import 'screens/monitoring_config_screen.dart';
+import 'screens/upload_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/dashboard',
@@ -53,5 +54,6 @@ final GoRouter appRouter = GoRouter(
       path: '/settings',
       builder: (context, state) => const MonitoringConfigScreen(),
     ),
+    GoRoute(path: '/upload', builder: (context, state) => const UploadScreen()),
   ],
 );

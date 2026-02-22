@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import '../models/summary.dart';
 import '../models/violation.dart';
@@ -102,29 +104,39 @@ class ApiProvider extends ChangeNotifier {
   // Upload helpers
   // ─────────────────────────────────────────────
 
-  Future<bool> uploadDataset(String filePath) async {
+  /// Upload transaction dataset. On web pass [bytes]+[fileName]; on mobile pass [filePath].
+  Future<bool> uploadDataset(
+    String? filePath, {
+    Uint8List? bytes,
+    String? fileName,
+  }) async {
     _isLoading = true;
     _scanStatusText = 'Uploading dataset...';
     notifyListeners();
-    final result = await _apiService.uploadTransactionDataset(filePath);
+    final result = await _apiService.uploadTransactionDataset(
+      filePath,
+      bytes: bytes,
+      fileName: fileName,
+    );
     _isLoading = false;
     _scanStatusText = '';
     notifyListeners();
     return result;
   }
 
+  /// Upload policy document. On web pass [bytes]+[fileName]; on mobile pass [filePath].
   Future<bool> uploadPolicy(
-    String filePath,
-    String policyName,
-    String description,
-  ) async {
+    String? filePath, {
+    Uint8List? bytes,
+    String? fileName,
+  }) async {
     _isLoading = true;
     _scanStatusText = 'Uploading policy...';
     notifyListeners();
     final result = await _apiService.uploadPolicy(
       filePath,
-      policyName,
-      description,
+      bytes: bytes,
+      fileName: fileName,
     );
     _isLoading = false;
     _scanStatusText = '';

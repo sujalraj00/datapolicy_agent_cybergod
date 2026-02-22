@@ -60,43 +60,72 @@ class _OnboardingConnectSourceScreenState
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Connect Data Source')),
+      appBar: AppBar(
+        title: const Text(
+          'Connect Data Source',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Upload your transaction database to start monitoring for compliance violations.',
-              style: Theme.of(context).textTheme.bodyLarge,
+              'Select Data Source',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Upload your transaction database or connect via API to start monitoring for compliance violations.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.black54,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: 32),
             // CSV Upload Card
             _FileUploadCard(
-              icon: Icons.table_chart_outlined,
+              icon: Icons.table_chart_rounded,
               title: 'Upload Transaction CSV',
               subtitle: _csvFileName != null
                   ? '✓ $_csvFileName'
-                  : 'IBM AML format (timestamp, amount, sender…)',
+                  : 'IBM AML format (timestamp, amount…)',
               isUploaded: _csvFileName != null,
               isLoading: _uploading,
               onTap: _uploading ? null : () => _pickAndUploadCSV(context),
             ),
             const SizedBox(height: 16),
             _FileUploadCard(
-              icon: Icons.api_outlined,
+              icon: Icons.api_rounded,
               title: 'Connect via API',
-              subtitle: 'Coming soon',
+              subtitle: 'Coming soon for real-time monitoring',
               isUploaded: false,
               isLoading: false,
               onTap: null,
             ),
             const Spacer(),
-            SizedBox(
+            Container(
               width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  if (_csvFileName != null && !_uploading)
+                    BoxShadow(
+                      color: primary.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                ],
+              ),
               child: ElevatedButton(
                 onPressed: _csvFileName != null && !_uploading
                     ? () => context.go('/onboarding/summary')
@@ -104,9 +133,9 @@ class _OnboardingConnectSourceScreenState
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 child: const Text(
@@ -141,32 +170,55 @@ class _FileUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     final disabled = onTap == null && !isUploaded;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
+          color: isUploaded ? Colors.green.withOpacity(0.05) : Colors.white,
           border: Border.all(
-            color: isUploaded ? Colors.green : Colors.grey.shade300,
-            width: isUploaded ? 2 : 1,
+            color: isUploaded
+                ? Colors.green
+                : (disabled ? Colors.grey.shade200 : primary.withOpacity(0.2)),
+            width: isUploaded ? 1.5 : 1,
           ),
-          color: isUploaded ? Colors.green.shade50 : null,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            if (!disabled && !isUploaded)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(
-              isUploaded ? Icons.check_circle : icon,
-              size: 40,
-              color: isUploaded
-                  ? Colors.green
-                  : disabled
-                  ? Colors.grey
-                  : primary,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isUploaded
+                    ? Colors.green.withOpacity(0.1)
+                    : (disabled
+                          ? Colors.grey.shade100
+                          : primary.withOpacity(0.1)),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isUploaded ? Icons.check_circle_rounded : icon,
+                size: 28,
+                color: isUploaded
+                    ? Colors.green
+                    : disabled
+                    ? Colors.grey.shade400
+                    : primary,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -177,8 +229,8 @@ class _FileUploadCard extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: disabled ? Colors.grey : Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      color: disabled ? Colors.grey.shade500 : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -196,14 +248,14 @@ class _FileUploadCard extends StatelessWidget {
             ),
             if (isLoading)
               const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
               )
-            else
+            else if (!disabled)
               Icon(
-                Icons.chevron_right,
-                color: disabled ? Colors.grey : Colors.black54,
+                Icons.chevron_right_rounded,
+                color: isUploaded ? Colors.green : Colors.black38,
               ),
           ],
         ),
