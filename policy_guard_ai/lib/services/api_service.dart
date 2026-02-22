@@ -115,9 +115,14 @@ class ApiService {
     return false;
   }
 
-  Future<List<Violation>> getViolations() async {
+  /// Fetch violations, optionally filtered by confidence band ("high", "medium", "low").
+  Future<List<Violation>> getViolations({String? confidenceFilter}) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/violations'));
+      String url = '$baseUrl/violations';
+      if (confidenceFilter != null) {
+        url += '?confidence=$confidenceFilter';
+      }
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data is List) {
@@ -134,17 +139,55 @@ class ApiService {
     return [];
   }
 
-  Future<bool> reviewViolation(String id, String label) async {
+  /// v2 HITL Review endpoint.
+  /// [action] must be one of: "confirm", "false_positive", "escalate".
+  /// Returns a map with `success`, `feedback_applied`, and `message` keys.
+  Future<Map<String, dynamic>?> reviewViolation(
+    String id,
+    String action, {
+    String? note,
+  }) async {
     try {
-      final response = await http.patch(
-        Uri.parse('$baseUrl/violations/$id'),
+      final response = await http.post(
+        Uri.parse('$baseUrl/violations/$id/review'),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"label": label, "status": "reviewed"}),
+        body: jsonEncode({
+          "action": action,
+          if (note != null && note.isNotEmpty) "note": note,
+        }),
       );
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
     } catch (e) {
       print('Error reviewing violation: $e');
     }
-    return false;
+    return null;
+  }
+
+  /// Returns the worker queue status counters.
+  Future<Map<String, dynamic>?> getQueueStatus() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/scan/queue'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['queue'] as Map<String, dynamic>?;
+      }
+    } catch (e) {
+      print('Error fetching queue status: $e');
+    }
+    return null;
+  }
+
+  /// Returns the URL to open the PDF audit report.
+  /// Optionally pass ISO-8601 date strings: "YYYY-MM-DD".
+  String getReportUrl({String? start, String? end}) {
+    final params = <String, String>{};
+    if (start != null) params['start'] = start;
+    if (end != null) params['end'] = end;
+    final uri = Uri.parse(
+      '$baseUrl/scan/report',
+    ).replace(queryParameters: params.isEmpty ? null : params);
+    return uri.toString();
   }
 }

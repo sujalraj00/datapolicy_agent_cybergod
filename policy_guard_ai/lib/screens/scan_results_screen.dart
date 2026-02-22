@@ -56,6 +56,7 @@ class _ScanResultsScreenState extends State<ScanResultsScreen> {
   }
 
   Widget _buildViolationItem(BuildContext context, Violation violation) {
+    // Severity colour
     Color severityColor;
     switch (violation.severity.toLowerCase()) {
       case 'high':
@@ -67,6 +68,25 @@ class _ScanResultsScreenState extends State<ScanResultsScreen> {
       case 'low':
       default:
         severityColor = Colors.blue;
+        break;
+    }
+
+    // AI Confidence band colour
+    Color confidenceColor;
+    String confidenceLabel;
+    switch (violation.confidenceBand.toLowerCase()) {
+      case 'high':
+        confidenceColor = Colors.red.shade700;
+        confidenceLabel = 'High Conf';
+        break;
+      case 'medium':
+        confidenceColor = Colors.orange.shade700;
+        confidenceLabel = 'Med Conf';
+        break;
+      case 'low':
+      default:
+        confidenceColor = Colors.grey.shade600;
+        confidenceLabel = 'Low Conf';
         break;
     }
 
@@ -93,6 +113,7 @@ class _ScanResultsScreenState extends State<ScanResultsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Title
                 Expanded(
                   child: Text(
                     violation.title,
@@ -102,33 +123,49 @@ class _ScanResultsScreenState extends State<ScanResultsScreen> {
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: severityColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    violation.severity.toUpperCase(),
-                    style: TextStyle(
-                      color: severityColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                // Severity badge
+                _buildBadge(violation.severity.toUpperCase(), severityColor),
+                const SizedBox(width: 6),
+                // AI Confidence badge
+                _buildBadge(confidenceLabel, confidenceColor),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
+            // Main explanation
             Text(
               violation.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: Colors.grey.shade600),
             ),
+            // AI confidence reasoning (subtitle)
+            if (violation.confidenceReasoning != null &&
+                violation.confidenceReasoning!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.psychology_outlined,
+                    size: 14,
+                    color: Colors.blueAccent,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      violation.confidenceReasoning!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.blueAccent,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -140,8 +177,9 @@ class _ScanResultsScreenState extends State<ScanResultsScreen> {
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                   ),
                 ),
+                // Status + confidence percentage
                 Text(
-                  violation.status,
+                  '${(violation.confidence * 100).toStringAsFixed(0)}% · ${violation.status}',
                   style: TextStyle(
                     color: violation.status == 'reviewed'
                         ? Colors.green
@@ -153,6 +191,25 @@ class _ScanResultsScreenState extends State<ScanResultsScreen> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

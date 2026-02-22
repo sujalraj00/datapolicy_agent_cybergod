@@ -18,25 +18,39 @@ class ApiProvider extends ChangeNotifier {
   String _scanStatusText = '';
   String get scanStatusText => _scanStatusText;
 
+  Map<String, dynamic>? _queueStatus;
+  Map<String, dynamic>? get queueStatus => _queueStatus;
+
+  // ─────────────────────────────────────────────
+  // Fetch methods
+  // ─────────────────────────────────────────────
+
   Future<void> fetchSummary() async {
     _isLoading = true;
     notifyListeners();
-
     _summary = await _apiService.getSummary();
-
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> fetchViolations() async {
+  Future<void> fetchViolations({String? confidenceFilter}) async {
     _isLoading = true;
     notifyListeners();
-
-    _violations = await _apiService.getViolations();
-
+    _violations = await _apiService.getViolations(
+      confidenceFilter: confidenceFilter,
+    );
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<void> fetchQueueStatus() async {
+    _queueStatus = await _apiService.getQueueStatus();
+    notifyListeners();
+  }
+
+  // ─────────────────────────────────────────────
+  // Scan
+  // ─────────────────────────────────────────────
 
   Future<bool> triggerScan() async {
     _isLoading = true;
@@ -84,6 +98,10 @@ class ApiProvider extends ChangeNotifier {
     }
   }
 
+  // ─────────────────────────────────────────────
+  // Upload helpers
+  // ─────────────────────────────────────────────
+
   Future<bool> uploadDataset(String filePath) async {
     _isLoading = true;
     _scanStatusText = 'Uploading dataset...';
@@ -114,27 +132,42 @@ class ApiProvider extends ChangeNotifier {
     return result;
   }
 
-  Future<bool> reviewViolation(String id, String label) async {
-    bool success = await _apiService.reviewViolation(id, label);
-    if (success) {
-      // Update local state without re-fetching everything
+  // ─────────────────────────────────────────────
+  // v2 HITL Review
+  // ─────────────────────────────────────────────
+
+  /// [action] must be: "confirm", "false_positive", or "escalate".
+  /// Returns a result map with `feedback_applied` bool, or null on failure.
+  Future<Map<String, dynamic>?> reviewViolation(
+    String id,
+    String action, {
+    String? note,
+  }) async {
+    final result = await _apiService.reviewViolation(id, action, note: note);
+
+    if (result != null && result['success'] == true) {
+      final feedbackApplied = result['feedback_applied'] == true;
       final index = _violations.indexWhere((v) => v.id == id);
       if (index != -1) {
-        final old = _violations[index];
-        _violations[index] = Violation(
-          id: old.id,
-          title: old.title,
-          description: old.description,
-          severity: old.severity,
+        _violations[index] = _violations[index].copyWithReview(
           status: 'reviewed',
-          label: label,
-          ruleViolated: old.ruleViolated,
+          label: action == 'confirm' ? 'true_positive' : action,
+          reviewAction: action,
+          feedbackApplied: feedbackApplied,
         );
         notifyListeners();
       }
-      // Depending on the backend we might need to refresh summary
       fetchSummary();
     }
-    return success;
+
+    return result;
+  }
+
+  // ─────────────────────────────────────────────
+  // Report URL helper
+  // ─────────────────────────────────────────────
+
+  String getReportUrl({String? start, String? end}) {
+    return _apiService.getReportUrl(start: start, end: end);
   }
 }
