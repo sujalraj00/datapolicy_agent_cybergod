@@ -8,14 +8,6 @@
 [![Claude AI](https://img.shields.io/badge/Claude%20AI-LLM%20Engine-D4A017?style=for-the-badge&logo=anthropic&logoColor=white)](https://anthropic.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-**Transform policy documents into automated compliance enforcement — no manual audits required.**
-
-[✨ Features](#-features) · [🏗️ Architecture](#️-architecture) · [🚀 Quick Start](#-quick-start) · [📸 Screenshots](#-screenshots) · [📡 API Reference](#-api-reference) · [🗺️ Roadmap](#️-roadmap)
-
----
-
-![PolicyGuard Dashboard Preview](assets/screenshots/dashboard-preview.png)
-
 </div>
 
 ---
@@ -123,28 +115,24 @@ PolicyGuard AI is an intelligent compliance monitoring system that eliminates th
       <br/><b>Welcome Screen</b>
     </td>
     <td align="center">
-      <img src="assets/screenshots/policy-upload.png" alt="Policy Upload" width="400"/>
-      <br/><b>Policy Document Upload</b>
+      <img src="Screenshot/Onboarding_ Connect_Data Source.png" alt="Policy Upload" width="400"/>
+      <br/><b>Onboarding Connect Data Source</b>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="assets/screenshots/rule-extraction.png" alt="Rule Extraction" width="400"/>
-      <br/><b>AI Rule Extraction</b>
+      <img src="Screenshot/Violation_Scan_Results.png" alt="Rule Extraction" width="400"/>
+      <br/><b>Violation Scan Results</b>
     </td>
     <td align="center">
-      <img src="assets/screenshots/violations.png" alt="Violation Feed" width="400"/>
-      <br/><b>Violation Detection Feed</b>
+      <img src="Screenshot/Violation_AI Reasoning.png" alt="Violation Feed" width="400"/>
+      <br/><b>Violatio Ai</b>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="assets/screenshots/review.png" alt="Human Review" width="400"/>
-      <br/><b>Human Review Workflow</b>
-    </td>
-    <td align="center">
-      <img src="assets/screenshots/reports.png" alt="Audit Reports" width="400"/>
-      <br/><b>Audit-Ready Reports</b>
+      <img src="Screenshot/Monitoring Configurations.png" alt="Human Review" width="400"/>
+      <br/><b>Monitoring Configurations</b>
     </td>
   </tr>
 </table>
